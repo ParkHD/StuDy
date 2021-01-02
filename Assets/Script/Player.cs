@@ -6,16 +6,18 @@ public class Player : MonoBehaviour
 {
     // Start is called before the first frame update
     public float speed;
+    float fireDelay;
 
     public GameObject[] weapons;
     public bool[] hasWeapons;
     public GameObject[] grenades;
     public int hasGrenades;
+    public Camera followCamera;
 
     Animator animator;
     Rigidbody rigidbody;
     GameObject nearObject;
-    GameObject equipWeapon;
+    Weapon equipWeapon;
 
     int equipWeaponIndex = -1;
 
@@ -37,10 +39,16 @@ public class Player : MonoBehaviour
     bool sDown1;
     bool sDown2;
     bool sDown3;
+    bool fDown;
+    bool rDown;
 
     bool isJump;
     bool isDodge;
     bool isSwap;
+    bool isFireReady = true;
+    bool isBoarder;
+    bool isReload=false;
+
 
     Vector3 moveVec;
     Vector3 dodgeVec;
@@ -65,6 +73,11 @@ public class Player : MonoBehaviour
         Dodge();
         Interation();
         Swap();
+
+        Turn();
+        Attack();
+        Reload();
+    
     }
     void GetInput()
     {
@@ -76,6 +89,8 @@ public class Player : MonoBehaviour
         sDown1 = Input.GetButtonDown("Swap1");
         sDown2 = Input.GetButtonDown("Swap2");
         sDown3 = Input.GetButtonDown("Swap3");
+        fDown = Input.GetButton("Fire1");
+        rDown = Input.GetButtonDown("Reload");
     }
     void Move()
     {
@@ -85,11 +100,13 @@ public class Player : MonoBehaviour
         {
             moveVec = dodgeVec;
         }
-        if (isSwap)
+        if (isSwap || !isFireReady || isReload)
         {
             moveVec = Vector3.zero;
         }
-        transform.position += moveVec * speed * (wDown ? 1f : 0.3f) * Time.deltaTime;
+
+        if(!isBoarder) //벽에 충돌하면 앞으로 못가게 하기위함
+            transform.position += moveVec * speed * (wDown ? 1f : 0.3f) * Time.deltaTime;
 
         animator.SetBool("isWalk", moveVec != Vector3.zero);
         animator.SetBool("isRun", wDown && moveVec != Vector3.zero);
@@ -141,11 +158,11 @@ public class Player : MonoBehaviour
         {
             if(equipWeapon != null)
             {
-                equipWeapon.SetActive(false);   
+                equipWeapon.gameObject.SetActive(false);   
             }
             equipWeaponIndex = weaponIndex;
-            equipWeapon = weapons[weaponIndex];
-            equipWeapon.SetActive(true);
+            equipWeapon = weapons[weaponIndex].GetComponent<Weapon>();
+            equipWeapon.gameObject.SetActive(true);
 
             animator.SetTrigger("doSwap");
             isSwap = true;
@@ -169,6 +186,78 @@ public class Player : MonoBehaviour
                 Destroy(nearObject);
             }
         }
+    }
+    void Attack()
+    {
+        if (equipWeapon == null)
+        {
+            return;
+        }
+        fireDelay += Time.deltaTime;
+        isFireReady = equipWeapon.rate < fireDelay;
+
+        if(fDown && isFireReady && !isDodge && !isSwap)
+        {
+            equipWeapon.Use();
+            animator.SetTrigger(equipWeapon.type == Weapon.Type.Melee? "doSwing" : "doShot");
+            fireDelay = 0;
+        }
+    }
+    void Reload()
+    {
+        if (equipWeapon == null || equipWeapon.type == Weapon.Type.Melee || ammo ==0)
+        {
+            return;
+        }
+        if(rDown && !isJump &&!isDodge && !isSwap && isFireReady)
+        {
+            animator.SetTrigger("doReload");
+            isReload = true;
+
+            Invoke("ReloadOut", 2f);
+
+        }
+    }
+    void ReloadOut()
+    {
+        int reAmmo = ammo < equipWeapon.maxAmmo ? ammo : equipWeapon.maxAmmo; // 넣을 탄 개수
+        equipWeapon.curAmmo = equipWeapon.maxAmmo;
+        ammo -= reAmmo;
+        isReload = false;
+
+    }
+    void Turn()
+    {
+        transform.LookAt(transform.position + moveVec);
+
+        Ray ray = followCamera.ScreenPointToRay(Input.mousePosition);
+        RaycastHit rayHit;
+        if (fDown)
+        {
+            if (Physics.Raycast(ray, out rayHit, 100))// ray에 닿은 값 rayHit에 저장
+                // Raycast : ray를 쏘아서 닿는 오브젝트 감지하는 함수
+            {
+                Vector3 nextVec = rayHit.point - transform.position;
+                nextVec.y = 0; // 높은곳을 클릭하면 높은곳으로 바라봄
+                transform.LookAt(transform.position + nextVec);
+            }
+        }
+    }
+    void FreezeRotation()
+    {
+        rigidbody.angularVelocity = Vector3.zero; //회전속도를 0으로 만듬 -> 외부충격으로 회전 방지
+    }
+    void StopToWall()
+    {
+        Debug.DrawRay(transform.position, transform.forward * 5, Color.green);//시작위치 쏘는방향 색
+        isBoarder = Physics.Raycast(transform.position, transform.forward, 5, LayerMask.GetMask("Wall"));
+            //쏘는곳 방향 길이 
+            // LayerMask가 wall이면 true로 바뀜
+    }
+    void FixedUpdate()
+    {
+        FreezeRotation();
+        StopToWall();
     }
     void OnCollisionEnter(Collision collision)
     {
