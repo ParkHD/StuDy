@@ -6,7 +6,8 @@ public class Bullet : MonoBehaviour
 {
     // Start is called before the first frame update
     public int damage;
-   
+    public bool isMelee;
+
     void Start()
     {
         
@@ -24,9 +25,21 @@ public class Bullet : MonoBehaviour
             Destroy(gameObject, 3);
 
         }
-        else if(collision.gameObject.tag == "Wall")
+        
+    }
+    void OnTriggerEnter(Collider other)
+    {
+        if (!isMelee&& other.gameObject.tag == "Wall")
         {
             Destroy(gameObject);
         }
+        if(!isMelee && other.gameObject.tag == "Floor")
+        {
+            Destroy(gameObject, 3);
+            
+        }
+       
     }
+
+  
 }

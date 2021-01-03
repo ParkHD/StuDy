@@ -13,11 +13,13 @@ public class Player : MonoBehaviour
     public GameObject[] grenades;
     public int hasGrenades;
     public Camera followCamera;
+    public GameObject grenade; //수류탄 프리팹
 
     Animator animator;
     Rigidbody rigidbody;
     GameObject nearObject;
     Weapon equipWeapon;
+    MeshRenderer[] meshs; //피격효과를 만들기위함 캐릭터가 많은MeshRenderer을 가지고있어서 배열형태 
 
     int equipWeaponIndex = -1;
 
@@ -41,6 +43,7 @@ public class Player : MonoBehaviour
     bool sDown3;
     bool fDown;
     bool rDown;
+    bool gDown; // 수류탄 투척
 
     bool isJump;
     bool isDodge;
@@ -48,6 +51,7 @@ public class Player : MonoBehaviour
     bool isFireReady = true;
     bool isBoarder;
     bool isReload=false;
+    bool isDamage; //플레이어 쳐맞는거 방지
 
 
     Vector3 moveVec;
@@ -57,6 +61,7 @@ public class Player : MonoBehaviour
     {
         animator = GetComponentInChildren<Animator>();
         rigidbody = GetComponent<Rigidbody>();
+        meshs = GetComponentsInChildren<MeshRenderer>();// 모두가져오기위해 GetComponents s붙음
     }
     void Start()
     {
@@ -77,6 +82,7 @@ public class Player : MonoBehaviour
         Turn();
         Attack();
         Reload();
+        Grenade();//수류탄 투척
     
     }
     void GetInput()
@@ -91,6 +97,7 @@ public class Player : MonoBehaviour
         sDown3 = Input.GetButtonDown("Swap3");
         fDown = Input.GetButton("Fire1");
         rDown = Input.GetButtonDown("Reload");
+        gDown = Input.GetButtonDown("Fire2");
     }
     void Move()
     {
@@ -232,14 +239,41 @@ public class Player : MonoBehaviour
 
         Ray ray = followCamera.ScreenPointToRay(Input.mousePosition);
         RaycastHit rayHit;
-        if (fDown)
+        if (fDown || gDown)
         {
             if (Physics.Raycast(ray, out rayHit, 100))// ray에 닿은 값 rayHit에 저장
                 // Raycast : ray를 쏘아서 닿는 오브젝트 감지하는 함수
             {
                 Vector3 nextVec = rayHit.point - transform.position;
-                nextVec.y = 0; // 높은곳을 클릭하면 높은곳으로 바라봄
+                nextVec.y = 0; // 높은곳을 클릭하면 높은곳으로 바라봄 -> 땅만 보게 y=0
                 transform.LookAt(transform.position + nextVec);
+            }
+        }
+    }
+    void Grenade()
+    {
+        if(hasGrenades == 0)
+        {
+            return;
+        }
+        if(gDown && !isReload && !isSwap)
+        {
+            Ray ray = followCamera.ScreenPointToRay(Input.mousePosition);
+            RaycastHit rayHit;
+            if (Physics.Raycast(ray, out rayHit, 100))// ray에 닿은 값 rayHit에 저장
+                                                      // Raycast : ray를 쏘아서 닿는 오브젝트 감지하는 함수
+            {
+                Vector3 nextVec = rayHit.point - transform.position;
+                nextVec.y = 2; // 높게 던지기 위함
+                //transform.LookAt(transform.position + nextVec);
+
+                GameObject instantGrenade = Instantiate(grenade, transform.position, transform.rotation);
+                Rigidbody rigidGrenade = instantGrenade.GetComponent<Rigidbody>();
+                rigidGrenade.AddForce(nextVec, ForceMode.Impulse);
+                rigidGrenade.AddTorque(Vector3.back * 10, ForceMode.Impulse);
+
+                hasGrenades--;
+                grenades[hasGrenades].SetActive(false);
             }
         }
     }
@@ -305,6 +339,34 @@ public class Player : MonoBehaviour
             }
             Destroy(other.gameObject);
         }
+        else if (other.tag == "EnemyBullet") 
+        {
+            if (!isDamage)
+            {
+                Bullet enemyBullet = other.GetComponent<Bullet>();
+                health -= enemyBullet.damage;
+                
+                if(other.GetComponent<Rigidbody>()!=null)
+                    Destroy(other.gameObject);
+
+                StartCoroutine(OnDamage());
+            }
+        }
+    }
+    IEnumerator OnDamage()
+    {
+        isDamage = true;
+        foreach(MeshRenderer mesh in meshs)
+        {
+            mesh.material.color = Color.yellow;
+        }
+        yield return new WaitForSeconds(1f);
+        isDamage = false;
+        foreach (MeshRenderer mesh in meshs)
+        {
+            mesh.material.color = Color.white;
+        }
+
     }
     void OnTriggerStay(Collider other)
     {
@@ -312,7 +374,7 @@ public class Player : MonoBehaviour
         {
             nearObject = other.gameObject;
         }
-        Debug.Log(nearObject.name);
+        //Debug.Log(nearObject.name);
     }
 
     void OnTriggerExit(Collider other)
