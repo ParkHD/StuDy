@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Item : MonoBehaviour
 {
-    public enum Type { Ammo, Coin,Grenade, Heart,Weapon};
+    public enum Type { Ammo, Coin,Grenade, Heart,Weapon};  // 열거형 변수선언
     public Type type;
     public int value;
 
@@ -19,7 +19,7 @@ public class Item : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void Update()  // 아이템이 더 멋나보이게 회전
     {
         transform.Rotate(Vector3.up * 20 * Time.deltaTime);
     }
