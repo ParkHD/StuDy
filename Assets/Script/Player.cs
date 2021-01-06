@@ -61,7 +61,7 @@ public class Player : MonoBehaviour
     {
         animator = GetComponentInChildren<Animator>();
         rigidbody = GetComponent<Rigidbody>();
-        meshs = GetComponentsInChildren<MeshRenderer>();// 모두가져오기위해 GetComponents s붙음
+        meshs = GetComponentsInChildren<MeshRenderer>();// 모두가져오기위해 GetComponents에0 s붙음
     }
     void Start()
     {
