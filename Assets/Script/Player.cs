@@ -89,7 +89,7 @@ public class Player : MonoBehaviour
     {
         hAxis = Input.GetAxisRaw("Horizontal");
         vAxis = Input.GetAxisRaw("Vertical");
-        wDown = Input.GetButton("Walk");
+        wDown = Input.GetButton("Walk"); // 뛰는 키 
         jDown = Input.GetButtonDown("Jump");
         iDown = Input.GetButtonDown("Interation");
         sDown1 = Input.GetButtonDown("Swap1");
@@ -103,29 +103,29 @@ public class Player : MonoBehaviour
     {
         moveVec = new Vector3(hAxis, 0, vAxis).normalized;
 
-        if (isDodge)
+        if (isDodge) // 닷지중에 
         {
             moveVec = dodgeVec;
         }
-        if (isSwap || !isFireReady || isReload)
+        if (isSwap || !isFireReady || isReload) // 스왑 or 총을쏠때 or 장전중일떄 moveVec = 0
         {
             moveVec = Vector3.zero;
         }
 
         if(!isBoarder) //벽에 충돌하면 앞으로 못가게 하기위함
-            transform.position += moveVec * speed * (wDown ? 1f : 0.3f) * Time.deltaTime;
+            transform.position += moveVec * speed * (wDown ? 1f : 0.3f) * Time.deltaTime; 
 
-        animator.SetBool("isWalk", moveVec != Vector3.zero);
-        animator.SetBool("isRun", wDown && moveVec != Vector3.zero);
+        animator.SetBool("isWalk", moveVec != Vector3.zero); // moveVec가 제로벡터가 아니면 -> 걷고있으면 isWalk = true
+        animator.SetBool("isRun", wDown && moveVec != Vector3.zero); // moveVec 가 제로벡터가 아니고 wDown키가 눌려있으면 isRun = true
 
-        transform.LookAt(transform.position + moveVec);
+        transform.LookAt(transform.position + moveVec); // 가는방향쪽 보기
     }
     void Jump()
     {
-        if (jDown && moveVec == Vector3.zero && !isJump && !isDodge && !isSwap)
+        if (jDown && moveVec == Vector3.zero && !isJump && !isDodge && !isSwap) // 점프키 and 움직이지 않고 and 점프중이 아니고 and 닷지중이 아닐떄 and  스왑중이 아닐떄
         {
-            rigidbody.AddForce(Vector3.up * 15, ForceMode.Impulse);
-            animator.SetBool("isJump", true);
+            rigidbody.AddForce(Vector3.up * 15, ForceMode.Impulse); // ForceMode.Impulse = 순간적인 힘
+            animator.SetBool("isJump", true); // 
             animator.SetTrigger("doJump");
             isJump = true;
         }
@@ -134,12 +134,12 @@ public class Player : MonoBehaviour
     {
         if (jDown && moveVec !=Vector3.zero && !isJump && !isDodge && !isSwap)
         {
-            dodgeVec = moveVec;
+            dodgeVec = moveVec; // 가던방향을 dodgeVec에 저장
             speed *= 2;
             animator.SetTrigger("doDodge");
             isDodge = true;
 
-            Invoke("DodgeOut",0.4f); 
+            Invoke("DodgeOut",0.4f); // 0.4초 딜레이후에 DodgeOut실행
         }
     }
     void DodgeOut()
