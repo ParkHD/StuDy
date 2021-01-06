@@ -147,6 +147,20 @@ public class Player : MonoBehaviour
         speed *= 0.5f;
         isDodge = false;
     }
+    void Interation()
+    {
+        if(iDown && nearObject != null && !isJump && !isDodge)
+        {
+            if(nearObject.tag == "Weapon")
+            {
+                Item item = nearObject.GetComponent<Item>();
+                int weaponIndex = item.value;
+                hasWeapons[weaponIndex] = true;
+
+                Destroy(nearObject);
+            }
+        }
+    }
     void Swap()
     {
         if (sDown1 && (!hasWeapons[0] || equipWeaponIndex == 0)) // 가지고있지 않거나 이미 손에 들고있을때 
@@ -180,20 +194,7 @@ public class Player : MonoBehaviour
     {
         isSwap = false;
     }
-    void Interation()
-    {
-        if(iDown && nearObject != null && !isJump && !isDodge)
-        {
-            if(nearObject.tag == "Weapon")
-            {
-                Item item = nearObject.GetComponent<Item>();
-                int weaponIndex = item.value;
-                hasWeapons[weaponIndex] = true;
 
-                Destroy(nearObject);
-            }
-        }
-    }
     void Attack()
     {
         if (equipWeapon == null)
