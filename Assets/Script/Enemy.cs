@@ -9,10 +9,10 @@ public class Enemy : MonoBehaviour
     public enum Type { A, B, C};
     public Type enemyType;
 
-    public int maxHealth;
-    public int curHealth;
+    public int maxHealth; 
+    public int curHealth; // 현재 체력
     public Transform target;
-    public BoxCollider meleeArea;
+    public BoxCollider meleeArea; // 공격범위
     public GameObject bullet; //원거리미니언 총알
 
     public bool isChase;
@@ -52,12 +52,12 @@ public class Enemy : MonoBehaviour
     {
         if (nav.enabled)
         {
-            nav.SetDestination(target.position);
+            nav.SetDestination(target.position); // 목표설정
             nav.isStopped = !isChase;
         }
 
     }
-    void OnTriggerEnter(Collider other)
+    void OnTriggerEnter(Collider other) // 피격 시
     {
         if (other.tag == "Melee")
         {
@@ -85,7 +85,7 @@ public class Enemy : MonoBehaviour
         {
             mat.color = Color.white;
         }
-        else
+        else // die
         {
             mat.color = Color.gray;
             gameObject.layer = 15;
@@ -94,7 +94,7 @@ public class Enemy : MonoBehaviour
             nav.enabled = false;
             anim.SetTrigger("doDie");
 
-            if (isGrenade)
+            if (isGrenade) // Grenade피격시 구분
             {
                 reactVec = reactVec.normalized;
                 reactVec += Vector3.up * 3;
@@ -109,9 +109,6 @@ public class Enemy : MonoBehaviour
                 reactVec += Vector3.up;
                 rigid.AddForce(reactVec * 5, ForceMode.Impulse);
             }
-
-
-
 
             Destroy(gameObject, 3);
         }
@@ -154,7 +151,7 @@ public class Enemy : MonoBehaviour
                 targetRange = 12f;
                 break;
             case Type.C:
-                targetRadius = 0.5f; //두꼐
+                targetRadius = 0.5f; //두꼐(얇을수록 정확도 상승)
                 targetRange = 25f; //길이
                 break;
         }
