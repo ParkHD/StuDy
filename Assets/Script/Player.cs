@@ -8,8 +8,8 @@ public class Player : MonoBehaviour
     public float speed;
     float fireDelay;
 
-    public GameObject[] weapons;
-    public bool[] hasWeapons;
+    public GameObject[] weapons; // 무기1,2,3
+    public bool[] hasWeapons; // 무기1,2,3 획득했는지 
     public GameObject[] grenades;
     public int hasGrenades;
     public Camera followCamera;
@@ -18,7 +18,7 @@ public class Player : MonoBehaviour
     Animator animator;
     Rigidbody rigidbody;
     GameObject nearObject;
-    Weapon equipWeapon;
+    Weapon equipWeapon; // 현재 손에 들고있는 weapon
     MeshRenderer[] meshs; //피격효과를 만들기위함 캐릭터가 많은MeshRenderer을 가지고있어서 배열형태 
 
     int equipWeaponIndex = -1;
@@ -163,7 +163,7 @@ public class Player : MonoBehaviour
     }
     void Swap()
     {
-        if (sDown1 && (!hasWeapons[0] || equipWeaponIndex == 0)) // 가지고있지 않거나 이미 손에 들고있을때 
+        if (sDown1 && (!hasWeapons[0] || equipWeaponIndex == 0)) // 가지고있지 않는다 or 이미 손에 들고있을때 
             return;
         if (sDown2 && (!hasWeapons[1] || equipWeaponIndex == 1))
             return;
@@ -177,12 +177,12 @@ public class Player : MonoBehaviour
 
         if ((sDown1 || sDown2 || sDown3) && !isDodge && !isJump)
         {
-            if(equipWeapon != null)
+            if(equipWeapon != null) // 현재 가지고있는 weapon 비활성화
             {
                 equipWeapon.gameObject.SetActive(false);   
             }
             equipWeaponIndex = weaponIndex;
-            equipWeapon = weapons[weaponIndex].GetComponent<Weapon>();
+            equipWeapon = weapons[weaponIndex].GetComponent<Weapon>(); // 
             equipWeapon.gameObject.SetActive(true);
 
             animator.SetTrigger("doSwap");
@@ -197,12 +197,12 @@ public class Player : MonoBehaviour
 
     void Attack()
     {
-        if (equipWeapon == null)
+        if (equipWeapon == null) // 장착한 weapon이 없을떄 return
         {
             return;
         }
-        fireDelay += Time.deltaTime;
-        isFireReady = equipWeapon.rate < fireDelay;
+        fireDelay += Time.deltaTime; // fireDelay 
+        isFireReady = equipWeapon.rate < fireDelay; // fireDelay(마지막으로 attack하고 경과시간)가 equipWeapon.rate(공격속도)보다 클때 공격가능
 
         if(fDown && isFireReady && !isDodge && !isSwap)
         {
@@ -226,7 +226,7 @@ public class Player : MonoBehaviour
 
         }
     }
-    void ReloadOut()
+    void ReloadOut() // 수정해야할듯??? 총알 남아있을 시에 장전 오류??
     {
         int reAmmo = ammo < equipWeapon.maxAmmo ? ammo : equipWeapon.maxAmmo; // 넣을 탄 개수
         equipWeapon.curAmmo = equipWeapon.maxAmmo;
@@ -238,7 +238,7 @@ public class Player : MonoBehaviour
     {
         transform.LookAt(transform.position + moveVec);
 
-        Ray ray = followCamera.ScreenPointToRay(Input.mousePosition);
+        Ray ray = followCamera.ScreenPointToRay(Input.mousePosition); // 마우스 포인트로 Ray쏘기
         RaycastHit rayHit;
         if (fDown || gDown)
         {
@@ -340,14 +340,14 @@ public class Player : MonoBehaviour
             }
             Destroy(other.gameObject);
         }
-        else if (other.tag == "EnemyBullet") 
+        else if (other.tag == "EnemyBullet") // Enemy한테 피격시
         {
-            if (!isDamage)
+            if (!isDamage) // 맞고있지 않을 때 -> 무한으로 피격 방지
             {
                 Bullet enemyBullet = other.GetComponent<Bullet>();
                 health -= enemyBullet.damage;
                 
-                if(other.GetComponent<Rigidbody>()!=null)
+                if(other.GetComponent<Rigidbody>() != null)
                     Destroy(other.gameObject);
 
                 StartCoroutine(OnDamage());
@@ -357,7 +357,7 @@ public class Player : MonoBehaviour
     IEnumerator OnDamage()
     {
         isDamage = true;
-        foreach(MeshRenderer mesh in meshs)
+        foreach(MeshRenderer mesh in meshs) // 캐릭터가 많은 renderer를 가지고있어서 
         {
             mesh.material.color = Color.yellow;
         }
