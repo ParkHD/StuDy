@@ -49,7 +49,7 @@ public class Weapon : MonoBehaviour
         // 메인함수가 실행되고 그 안에 서브루틴 순서대로 실행되는 것과 달리 코루틴은 메인함수가 실행됨과 동시에 실행
         // yield return null; // 1프레임 대기
         yield return new WaitForSeconds(0.1f); // 0.1초 딜레이
-        meleeArea.enabled = true;
+        meleeArea.enabled = true; // 공격시에만 활성화 -> weapon을 들고만 있을때 attack되지 않기위함
         trailEffect.enabled = true;
 
         yield return new WaitForSeconds(0.5f);
@@ -60,12 +60,12 @@ public class Weapon : MonoBehaviour
     }
     IEnumerator Shot()
     {
-        GameObject intantBullet = Instantiate(bullet, bulletPos.position, bulletPos.rotation);
+        GameObject intantBullet = Instantiate(bullet, bulletPos.position, bulletPos.rotation); // GameObject(bullet)생성
         Rigidbody bulletRigid = intantBullet.GetComponent<Rigidbody>();
-        bulletRigid.velocity = bulletPos.forward * 50;
+        bulletRigid.velocity = bulletPos.forward * 50; // bullet 속도
         yield return null;
 
-        GameObject intantCaseBullet = Instantiate(Casebullet, CasebulletPos.position, CasebulletPos.rotation);
+        GameObject intantCaseBullet = Instantiate(Casebullet, CasebulletPos.position, CasebulletPos.rotation); // 탄피 생성
         Rigidbody CasebulletRigid = intantCaseBullet.GetComponent<Rigidbody>();
         Vector3 caseVec = CasebulletPos.forward * Random.Range(-3, -2) + Vector3.up * Random.Range(2, 3);
         CasebulletRigid.AddForce(caseVec, ForceMode.Impulse);
